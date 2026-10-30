@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}My Profile — Attendify AI{% endblock %}
+{% block page_title %}Student Identity & Security Settings{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <!-- Student Information Card -->
+    <div class="col-lg-5">
+        <div class="panel-card text-center p-4">
+            <div class="position-relative d-inline-block mb-3">
+                {% if student.photo_path %}
+                    <img src="{{ url_for('serve_upload', filename=student.photo_path) }}" class="rounded-circle border shadow" style="width: 120px; height: 120px; object-fit: cover;" alt="{{ student.name }}">
+                {% else %}
+                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center shadow mx-auto" style="width: 120px; height: 120px; font-size: 42px;">
+                        {{ student.name[:1] }}
+                    </div>
+                {% endif %}
+                <span class="position-absolute bottom-0 end-0 badge rounded-pill bg-success p-2 border border-white">
+                    <i class="fas fa-check"></i>
+                </span>
+            </div>
+
+            <h4 class="fw-bold text-dark mb-1">{{ student.name }}</h4>
+            <div class="badge bg-primary fs-6 px-3 py-1 mb-2">{{ student.roll_number }}</div>
+            <p class="text-muted small mb-3">{{ student.department }} • {{ student.year }}</p>
+
+            <div class="text-start border-top pt-3 mt-3">
+                <div class="mb-3">
+                    <span class="text-muted small d-block">Registered Email</span>
+                    <strong class="text-dark">{{ student.email }}</strong>
+                </div>
+                <div class="mb-3">
+                    <span class="text-muted small d-block">Phone Number</span>
+                    <strong class="text-dark">{{ student.phone or 'Not Provided' }}</strong>
+                </div>
+                <div class="mb-3">
+                    <span class="text-muted small d-block">Gender</span>
+                    <strong class="text-dark">{{ student.gender }}</strong>
+                </div>
+                <div class="mb-3">
+                    <span class="text-muted small d-block">Biometric Status</span>
+                    {% if student.photo_path %}
+                        <span class="badge bg-success-subtle text-success border border-success-subtle">
+                            <i class="fas fa-check-circle me-1"></i> Biometrics Enrolled & Verified
+                        </span>
+                    {% else %}
+                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle">
+                            <i class="fas fa-exclamation-triangle me-1"></i> Pending Facial Capture
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Security & Password Change -->
+    <div class="col-lg-7">
+        <div class="panel-card">
+            <div class="panel-header">
+                <div class="panel-title">
+                    <i class="fas fa-shield-alt"></i> Account Security & Password
+                </div>
+            </div>
+
+            <div class="panel-body">
+                <form method="POST" action="{{ url_for('student_profile') }}">
+                    <div class="mb-3">
+                        <label class="form-label-custom">Current Password *</label>
+                        <input type="password" name="current_password" class="form-control form-control-custom" placeholder="••••••••" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label-custom">New Password *</label>
+                        <input type="password" name="new_password" class="form-control form-control-custom" placeholder="Minimum 6 characters" minlength="6" required>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label-custom">Confirm New Password *</label>
+                        <input type="password" name="confirm_password" class="form-control form-control-custom" placeholder="Re-enter new password" minlength="6" required>
+                    </div>
+
+                    <button type="submit" class="btn-primary-custom px-4 py-2">
+                        <i class="fas fa-key me-1"></i> Update Password
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card bg-light border p-4 rounded-3 mt-4">
+            <h6 class="fw-bold text-dark mb-2"><i class="fas fa-user-lock text-primary me-2"></i> Privacy & Biometric Data Security</h6>
+            <p class="small text-muted mb-0">
+                Your facial biometric encodings are securely stored using local binary pattern histograms. Raw biometric streams are never shared externally, and attendance can only be validated against institutional camera checkpoints.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

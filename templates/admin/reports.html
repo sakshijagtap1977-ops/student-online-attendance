@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+{% block title %}Reports & Analytics — Attendify AI{% endblock %}
+{% block page_title %}Attendance Analytics & Institutional Reports{% endblock %}
+
+{% block content %}
+<!-- Report Criteria Selector Card -->
+<div class="panel-card mb-4">
+    <div class="panel-header">
+        <div class="panel-title">
+            <i class="fas fa-file-invoice"></i> Report Generator & Filter Criteria
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <!-- One-Click Exports -->
+            <a href="{{ url_for('export_attendance', fmt='excel', type=report_type, date=date_filter, department=dept_filter, year=year_filter) }}" class="btn btn-sm btn-outline-success">
+                <i class="fas fa-file-excel me-1"></i> Download Excel (.xlsx)
+            </a>
+            <a href="{{ url_for('export_attendance', fmt='csv', type=report_type, date=date_filter, department=dept_filter, year=year_filter) }}" class="btn btn-sm btn-outline-primary">
+                <i class="fas fa-file-csv me-1"></i> Download CSV
+            </a>
+        </div>
+    </div>
+
+    <div class="panel-body bg-light">
+        <form method="GET" action="{{ url_for('admin_reports') }}" class="row g-3 align-items-end">
+            <!-- Report Timeframe Type -->
+            <div class="col-md-3">
+                <label class="form-label-custom">Report Timeframe</label>
+                <select name="type" class="form-select form-select-custom" onchange="this.form.submit()">
+                    <option value="daily" {% if report_type == 'daily' %}selected{% endif %}>Daily Attendance Report</option>
+                    <option value="weekly" {% if report_type == 'weekly' %}selected{% endif %}>Weekly Attendance Report (Last 7 Days)</option>
+                    <option value="monthly" {% if report_type == 'monthly' %}selected{% endif %}>Monthly Attendance Report (Last 30 Days)</option>
+                    <option value="all" {% if report_type == 'all' %}selected{% endif %}>All-Time Comprehensive Report</option>
+                </select>
+            </div>
+
+            <!-- Specific Date (if daily) -->
+            <div class="col-md-3">
+                <label class="form-label-custom">Specific Date (for Daily)</label>
+                <input type="date" name="date" class="form-control form-control-custom" value="{{ date_filter or '' }}">
+            </div>
+
+            <!-- Department Filter -->
+            <div class="col-md-3">
+                <label class="form-label-custom">Department</label>
+                <select name="department" class="form-select form-select-custom">
+                    <option value="All">All Departments</option>
+                    <option value="Computer Science" {% if dept_filter == 'Computer Science' %}selected{% endif %}>Computer Science</option>
+                    <option value="Information Technology" {% if dept_filter == 'Information Technology' %}selected{% endif %}>Information Technology</option>
+                    <option value="Electronics" {% if dept_filter == 'Electronics' %}selected{% endif %}>Electronics</option>
+                    <option value="Mechanical" {% if dept_filter == 'Mechanical' %}selected{% endif %}>Mechanical</option>
+                </select>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="col-md-3">
+                <button type="submit" class="btn-primary-custom w-100 justify-content-center py-2">
+                    <i class="fas fa-sync-alt"></i> Generate Dataset
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Low Attendance Warnings Banner (Defaulters List) -->
+{% if low_att_students %}
+<div class="panel-card mb-4 border-warning">
+    <div class="panel-header bg-warning-subtle text-warning-emphasis">
+        <div class="panel-title text-warning-emphasis">
+            <i class="fas fa-exclamation-triangle text-warning"></i> Low Attendance Defaulters Warning (&lt; 75%)
+        </div>
+        <span class="badge bg-warning text-dark">{{ low_att_students|length }} Flagged Students</span>
+    </div>
+    <div class="panel-body p-0">
+        <div class="table-responsive">
+            <table class="table-custom mb-0">
+                <thead>
+                    <tr>
+                        <th>Roll Number</th>
+                        <th>Student Name</th>
+                        <th>Department</th>
+                        <th>Academic Year</th>
+                        <th>Total Classes</th>
+                        <th>Absent Days</th>
+                        <th>Attendance %</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in low_att_students %}
+                        <tr>
+                            <td><span class="badge bg-primary">{{ s.roll_number }}</span></td>
+                            <td><strong>{{ s.name }}</strong></td>
+                            <td>{{ s.department }}</td>
+                            <td>{{ s.year }}</td>
+                            <td>{{ s.total_days }}</td>
+                            <td><span class="text-danger fw-bold">{{ s.absent_days }}</span></td>
+                            <td>
+                                <span class="badge bg-danger fs-6">{{ s.attendance_percentage }}%</span>
+                            </td>
+                            <td class="text-end">
+                                <a href="{{ url_for('admin_student_profile', student_id=s.id) }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-eye me-1"></i> Profile
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Report Records Table -->
+<div class="panel-card">
+    <div class="panel-header">
+        <div class="panel-title">
+            <i class="fas fa-table"></i> Generated Attendance Report ({{ records|length }} Records)
+        </div>
+    </div>
+    <div class="panel-body p-0">
+        <div class="table-responsive">
+            <table class="table-custom">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Roll Number</th>
+                        <th>Student Name</th>
+                        <th>Department</th>
+                        <th>Year</th>
+                        <th>Status</th>
+                        <th>Verification Mode</th>
+                        <th>Confidence</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in records %}
+                        <tr>
+                            <td><strong>{{ r.date }}</strong></td>
+                            <td><span class="font-monospace text-muted">{{ r.time }}</span></td>
+                            <td><span class="badge bg-primary">{{ r.roll_number }}</span></td>
+                            <td>{{ r.student_name }}</td>
+                            <td>{{ r.department }}</td>
+                            <td>{{ r.year }}</td>
+                            <td>
+                                {% if r.status == 'Present' %}
+                                    <span class="badge-status badge-present"><i class="fas fa-check-circle"></i> Present</span>
+                                {% elif r.status == 'Late' %}
+                                    <span class="badge-status badge-late"><i class="fas fa-clock"></i> Late</span>
+                                {% else %}
+                                    <span class="badge-status badge-absent"><i class="fas fa-times-circle"></i> Absent</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ r.verification_mode }}</td>
+                            <td>
+                                {% if r.confidence_score %}
+                                    <span class="badge bg-light text-dark border">{{ "%.1f"|format(r.confidence_score) }}%</span>
+                                {% else %}
+                                    <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="9" class="text-center py-5 text-muted">
+                                <i class="fas fa-folder-open fs-2 d-block mb-2"></i>
+                                No attendance records match the selected report criteria.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

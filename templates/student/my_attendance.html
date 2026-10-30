@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}My Attendance History — Attendify AI{% endblock %}
+{% block page_title %}My Detailed Attendance History{% endblock %}
+
+{% block content %}
+<div class="panel-card">
+    <div class="panel-header flex-wrap gap-3">
+        <div class="panel-title">
+            <i class="fas fa-history"></i> Attendance Sessions Log ({{ history|length }} Total Records)
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <!-- Download Buttons -->
+            <a href="{{ url_for('export_attendance', fmt='excel') }}" class="btn btn-sm btn-outline-success">
+                <i class="fas fa-file-excel me-1"></i> Export Excel
+            </a>
+            <a href="{{ url_for('export_attendance', fmt='csv') }}" class="btn btn-sm btn-outline-primary">
+                <i class="fas fa-file-csv me-1"></i> Export CSV
+            </a>
+        </div>
+    </div>
+
+    <!-- Attendance Performance Summary Pill Bar -->
+    <div class="p-3 bg-light border-bottom">
+        <div class="row g-3 text-center">
+            <div class="col-md-3">
+                <div class="p-2 bg-white rounded border">
+                    <span class="text-muted small">Attendance Rate</span>
+                    <h5 class="fw-bold mb-0 {% if stats.percentage >= 75 %}text-success{% else %}text-danger{% endif %}">
+                        {{ stats.percentage }}%
+                    </h5>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="p-2 bg-white rounded border">
+                    <span class="text-muted small">Total Sessions</span>
+                    <h5 class="fw-bold text-dark mb-0">{{ stats.total_classes }}</h5>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="p-2 bg-white rounded border">
+                    <span class="text-muted small">Attended (Present / Late)</span>
+                    <h5 class="fw-bold text-success mb-0">{{ stats.present + stats.late }}</h5>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="p-2 bg-white rounded border">
+                    <span class="text-muted small">Absences</span>
+                    <h5 class="fw-bold text-danger mb-0">{{ stats.absent }}</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Attendance Table -->
+    <div class="panel-body p-0">
+        <div class="table-responsive">
+            <table class="table-custom">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Recorded Time</th>
+                        <th>Status</th>
+                        <th>Verification Mode</th>
+                        <th>Biometric Confidence</th>
+                        <th>Remarks / Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for h in history %}
+                        <tr>
+                            <td><strong>{{ h.date }}</strong></td>
+                            <td><span class="font-monospace text-muted">{{ h.time }}</span></td>
+                            <td>
+                                {% if h.status == 'Present' %}
+                                    <span class="badge-status badge-present"><i class="fas fa-check-circle"></i> Present</span>
+                                {% elif h.status == 'Late' %}
+                                    <span class="badge-status badge-late"><i class="fas fa-clock"></i> Late</span>
+                                {% else %}
+                                    <span class="badge-status badge-absent"><i class="fas fa-times-circle"></i> Absent</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if h.verification_mode == 'Face Recognition' %}
+                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
+                                        <i class="fas fa-camera me-1"></i> Face Recognition
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-light text-dark border">
+                                        <i class="fas fa-user-edit me-1"></i> Manual Override
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if h.confidence_score %}
+                                    <span class="badge bg-light text-dark border">{{ "%.1f"|format(h.confidence_score) }}%</span>
+                                {% else %}
+                                    <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+                            <td><small class="text-muted">{{ h.notes or '—' }}</small></td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center py-5 text-muted">
+                                <i class="far fa-calendar-times fs-2 d-block mb-2"></i>
+                                No attendance records have been registered for your account yet.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard — Attendify AI{% endblock %}
+{% block page_title %}Executive Attendance Dashboard{% endblock %}
+
+{% block content %}
+<!-- Metrics Top Cards Row -->
+<div class="row g-4 mb-4">
+    <!-- Total Registered Students -->
+    <div class="col-xl-3 col-sm-6">
+        <div class="stat-card primary">
+            <div>
+                <div class="stat-label">Total Students</div>
+                <div class="stat-number">{{ stats.total_students }}</div>
+                <div class="stat-subtext text-primary">
+                    <i class="fas fa-users"></i> Enrolled active database
+                </div>
+            </div>
+            <div class="stat-icon-wrapper primary">
+                <i class="fas fa-user-graduate"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Present Today -->
+    <div class="col-xl-3 col-sm-6">
+        <div class="stat-card success">
+            <div>
+                <div class="stat-label">Present Today</div>
+                <div class="stat-number" id="statPresentCount">{{ stats.present_today }}</div>
+                <div class="stat-subtext text-success">
+                    <i class="fas fa-check-circle"></i> On-time verified
+                </div>
+            </div>
+            <div class="stat-icon-wrapper success">
+                <i class="fas fa-calendar-check"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Late Today -->
+    <div class="col-xl-3 col-sm-6">
+        <div class="stat-card warning">
+            <div>
+                <div class="stat-label">Late Today</div>
+                <div class="stat-number">{{ stats.late_today }}</div>
+                <div class="stat-subtext text-warning">
+                    <i class="fas fa-clock"></i> Arrived past 09:15 AM
+                </div>
+            </div>
+            <div class="stat-icon-wrapper warning">
+                <i class="fas fa-user-clock"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Absent Today -->
+    <div class="col-xl-3 col-sm-6">
+        <div class="stat-card danger">
+            <div>
+                <div class="stat-label">Absent / Unmarked</div>
+                <div class="stat-number">{{ stats.absent_today + stats.unmarked_today }}</div>
+                <div class="stat-subtext text-danger">
+                    <i class="fas fa-user-times"></i> Missing attendance
+                </div>
+            </div>
+            <div class="stat-icon-wrapper danger">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Attendance Performance Dial & Quick Actions -->
+<div class="row g-4 mb-4">
+    <!-- Today Attendance Progress Card -->
+    <div class="col-lg-8">
+        <div class="panel-card h-100">
+            <div class="panel-header">
+                <div class="panel-title">
+                    <i class="fas fa-chart-bar"></i> Weekly Attendance Trends
+                </div>
+                <span class="badge bg-light text-primary border px-3 py-1">Last 7 Days</span>
+            </div>
+            <div class="panel-body">
+                <div style="height: 300px;">
+                    <canvas id="weeklyAttendanceChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Department Distribution Doughnut -->
+    <div class="col-lg-4">
+        <div class="panel-card h-100">
+            <div class="panel-header">
+                <div class="panel-title">
+                    <i class="fas fa-chart-pie"></i> Department Split
+                </div>
+                <span class="badge bg-light text-muted border px-2 py-1">Enrolled</span>
+            </div>
+            <div class="panel-body d-flex flex-column align-items-center justify-content-center">
+                <div style="height: 240px; width: 100%;">
+                    <canvas id="deptAttendanceChart"></canvas>
+                </div>
+                <div class="mt-3 text-center">
+                    <div class="small text-muted">Overall Average Attendance</div>
+                    <h4 class="fw-bold text-primary mb-0">{{ stats.overall_percentage }}%</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bottom Row: Recent Attendance & Low Attendance Alerts -->
+<div class="row g-4">
+    <!-- Today's Live Attendance Stream -->
+    <div class="col-lg-8">
+        <div class="panel-card mb-0">
+            <div class="panel-header">
+                <div class="panel-title">
+                    <i class="fas fa-history"></i> Today's Attendance Stream
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('live_camera') }}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-video me-1"></i> Live Stream
+                    </a>
+                    <a href="{{ url_for('admin_attendance') }}" class="btn btn-sm btn-primary-custom" style="padding: 4px 12px; font-size: 13px;">
+                        View All Logs
+                    </a>
+                </div>
+            </div>
+            <div class="panel-body p-0">
+                <div class="table-responsive">
+                    <table class="table-custom">
+                        <thead>
+                            <tr>
+                                <th>Roll No</th>
+                                <th>Student Name</th>
+                                <th>Department</th>
+                                <th>Time</th>
+                                <th>Status</th>
+                                <th>Confidence</th>
+                            </tr>
+                        </thead>
+                        <tbody id="liveAttendanceStreamBody">
+                            {% for r in recent_records %}
+                                <tr>
+                                    <td><span class="badge bg-primary">{{ r.roll_number }}</span></td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="fw-bold">{{ r.name }}</div>
+                                        </div>
+                                    </td>
+                                    <td>{{ r.department }}</td>
+                                    <td><span class="font-monospace text-muted">{{ r.time }}</span></td>
+                                    <td>
+                                        {% if r.status == 'Present' %}
+                                            <span class="badge-status badge-present"><i class="fas fa-check-circle"></i> Present</span>
+                                        {% elif r.status == 'Late' %}
+                                            <span class="badge-status badge-late"><i class="fas fa-clock"></i> Late</span>
+                                        {% else %}
+                                            <span class="badge-status badge-absent"><i class="fas fa-times-circle"></i> Absent</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if r.confidence_score %}
+                                            <span class="badge bg-light text-dark border">{{ "%.1f"|format(r.confidence_score) }}%</span>
+                                        {% else %}
+                                            <span class="badge bg-light text-muted border">Manual</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% else %}
+                                <tr>
+                                    <td colspan="6" class="text-center py-4 text-muted">
+                                        <i class="far fa-clipboard fs-4 d-block mb-2"></i>
+                                        No attendance entries recorded yet today. Click "Launch Camera" to begin scanning.
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Low Attendance Defaulter Alerts (< 75%) -->
+    <div class="col-lg-4">
+        <div class="panel-card mb-0">
+            <div class="panel-header bg-danger-subtle border-danger-subtle">
+                <div class="panel-title text-danger">
+                    <i class="fas fa-bell text-danger"></i> Low Attendance Alerts (< 75%)
+                </div>
+                <span class="badge bg-danger">{{ low_attendance|length }} Students</span>
+            </div>
+            <div class="panel-body">
+                {% if low_attendance %}
+                    <div class="list-group list-group-flush">
+                        {% for s in low_attendance %}
+                            <div class="list-group-item px-0 py-3 d-flex justify-content-between align-items-center border-bottom">
+                                <div>
+                                    <div class="fw-bold text-dark">{{ s.name }}</div>
+                                    <div class="small text-muted">{{ s.roll_number }} • {{ s.department }}</div>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge bg-danger fs-6">{{ s.attendance_percentage }}%</span>
+                                    <div class="text-muted" style="font-size: 11px;">{{ s.absent_days }} days absent</div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4 text-muted">
+                        <i class="fas fa-shield-alt text-success fs-3 d-block mb-2"></i>
+                        All students currently maintain satisfactory attendance above 75%!
+                    </div>
+                {% endif %}
+                <div class="mt-3">
+                    <a href="{{ url_for('admin_reports', type='monthly') }}" class="btn btn-outline-secondary w-100 btn-sm">
+                        <i class="fas fa-download me-1"></i> Generate Defaulter Report
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

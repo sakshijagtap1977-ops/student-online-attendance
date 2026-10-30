@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+
+{% block title %}Live Camera Attendance — Attendify AI{% endblock %}
+{% block page_title %}Live Facial Recognition & Attendance Detection{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <!-- Camera Viewport & Controls (Left 8 Cols) -->
+    <div class="col-lg-8">
+        <div class="panel-card mb-4">
+            <div class="panel-header flex-wrap gap-2">
+                <div class="panel-title">
+                    <i class="fas fa-video"></i> Real-time Biometric Camera Stream
+                </div>
+                
+                <!-- Status Pill & Mode Toggle -->
+                <div class="d-flex align-items-center gap-2">
+                    <select id="cameraModeSelect" class="form-select form-select-sm" style="width: auto; font-size: 13px;">
+                        <option value="webrtc" selected>Webcam (Browser Client Mode)</option>
+                        <option value="opencv">OpenCV VideoCapture (Server Mode)</option>
+                    </select>
+
+                    <div id="cameraStatusPill" class="camera-status-pill py-1 px-3">
+                        <span class="live-pulse bg-secondary"></span>
+                        <span style="font-size: 12.5px;">Camera Inactive</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel-body p-3">
+                <!-- Camera Viewport Container -->
+                <div class="camera-container" id="cameraStreamContainer">
+                    <!-- HTML5 WebRTC Video Stream -->
+                    <video id="cameraVideo" class="camera-video" autoplay playsinline muted style="display: none;"></video>
+                    <!-- Real-time Detection Overlay Canvas -->
+                    <canvas id="cameraCanvas" class="camera-canvas" style="display: none;"></canvas>
+                    
+                    <!-- Futuristic Laser Scanline Animation -->
+                    <div class="camera-scanline" id="cameraScanline" style="display: none;"></div>
+
+                    <!-- Inactive Placeholder State -->
+                    <div class="camera-empty-state" id="cameraEmptyState">
+                        <i class="fas fa-video-slash"></i>
+                        <h5 class="fw-bold text-white mb-2">Live Camera Feed Offline</h5>
+                        <p class="small text-muted mb-4" style="max-width: 420px; margin: 0 auto;">
+                            Click the <strong>Start Camera</strong> button below to activate your web camera and initiate real-time AI face recognition.
+                        </p>
+                        <button type="button" class="btn-primary-custom" onclick="document.getElementById('btnStartCamera').click()">
+                            <i class="fas fa-play"></i> Initialize Camera Now
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Camera Control Buttons -->
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mt-4 pt-3 border-top">
+                    <div class="d-flex align-items-center gap-2">
+                        <button type="button" class="btn-primary-custom px-4 py-2" id="btnStartCamera">
+                            <i class="fas fa-play"></i> Start Camera
+                        </button>
+                        <button type="button" class="btn-danger-custom px-4 py-2 d-none" id="btnStopCamera">
+                            <i class="fas fa-stop"></i> Stop Camera
+                        </button>
+                    </div>
+
+                    <!-- AI Model Health Pill -->
+                    <div>
+                        {% if is_model_trained %}
+                            <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2">
+                                <i class="fas fa-brain me-1"></i> AI Model Active & Trained
+                            </span>
+                        {% else %}
+                            <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-3 py-2">
+                                <i class="fas fa-exclamation-triangle me-1"></i> Model Requires Student Faces
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- How It Works & Biometric Rules Guide -->
+        <div class="card bg-white border rounded-3 p-4">
+            <h6 class="fw-bold text-dark mb-2">
+                <i class="fas fa-shield-alt text-primary me-2"></i> Real-time Attendance & Anti-Duplicate Protocol
+            </h6>
+            <div class="row g-3 small text-muted">
+                <div class="col-md-4">
+                    <strong class="text-dark d-block mb-1"><i class="fas fa-user-check text-success me-1"></i> Auto-Marking</strong>
+                    When an enrolled student's face is recognized with confidence &ge; 70%, attendance is marked as <strong>Present</strong> with precise timestamp.
+                </div>
+                <div class="col-md-4">
+                    <strong class="text-dark d-block mb-1"><i class="fas fa-ban text-warning me-1"></i> Duplicate Lock</strong>
+                    If the student has already marked attendance today, subsequent recognitions will notify "Already Marked" and skip duplicate database insertion.
+                </div>
+                <div class="col-md-4">
+                    <strong class="text-dark d-block mb-1"><i class="fas fa-user-secret text-danger me-1"></i> Unknown Persons</strong>
+                    Faces not registered in the system are outlined in red with an "Unknown Person" notification.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Live Stream Feed & Today's Attendance List (Right 4 Cols) -->
+    <div class="col-lg-4">
+        <!-- Live Counters -->
+        <div class="panel-card mb-4">
+            <div class="panel-header py-3">
+                <div class="panel-title fs-6">
+                    <i class="fas fa-chart-pie"></i> Today's Live Attendance
+                </div>
+                <span class="badge bg-primary px-2">{{ today_date }}</span>
+            </div>
+            <div class="panel-body p-3">
+                <div class="row g-2 text-center">
+                    <div class="col-4">
+                        <div class="p-2 bg-light rounded border">
+                            <div class="small text-muted">Present</div>
+                            <h4 class="fw-bold text-success mb-0" id="statPresentCount">{{ stats.present_today }}</h4>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="p-2 bg-light rounded border">
+                            <div class="small text-muted">Late</div>
+                            <h4 class="fw-bold text-warning mb-0">{{ stats.late_today }}</h4>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="p-2 bg-light rounded border">
+                            <div class="small text-muted">Pending</div>
+                            <h4 class="fw-bold text-danger mb-0">{{ stats.unmarked_today }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Real-time Recognition Stream List -->
+        <div class="panel-card">
+            <div class="panel-header py-3">
+                <div class="panel-title fs-6">
+                    <i class="fas fa-bolt text-warning"></i> Real-time Detection Feed
+                </div>
+                <span class="badge bg-light text-dark border">Auto-Updating</span>
+            </div>
+            <div class="panel-body p-0">
+                <div class="table-responsive" style="max-height: 480px; overflow-y: auto;">
+                    <table class="table-custom" style="font-size: 13px;">
+                        <thead>
+                            <tr>
+                                <th>Roll No</th>
+                                <th>Student</th>
+                                <th>Time</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="liveAttendanceStreamBody">
+                            {% for r in recent_records %}
+                                <tr>
+                                    <td><span class="badge bg-primary">{{ r.roll_number }}</span></td>
+                                    <td>
+                                        <div class="fw-bold text-dark">{{ r.name }}</div>
+                                        <div class="text-muted" style="font-size: 11px;">{{ r.department }}</div>
+                                    </td>
+                                    <td><span class="font-monospace text-muted small">{{ r.time }}</span></td>
+                                    <td>
+                                        {% if r.status == 'Present' %}
+                                            <span class="badge-status badge-present py-1 px-2" style="font-size: 11px;">Present</span>
+                                        {% elif r.status == 'Late' %}
+                                            <span class="badge-status badge-late py-1 px-2" style="font-size: 11px;">Late</span>
+                                        {% else %}
+                                            <span class="badge-status badge-absent py-1 px-2" style="font-size: 11px;">Absent</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% else %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-4 text-muted">
+                                        No attendance entries yet today. Start the camera to detect students.
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/camera.js') }}"></script>
+{% endblock %}

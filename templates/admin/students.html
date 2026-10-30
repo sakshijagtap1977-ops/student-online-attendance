@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block title %}Student Records — Attendify AI{% endblock %}
+{% block page_title %}Student Directory & Biometric Profiles{% endblock %}
+
+{% block content %}
+<div class="panel-card">
+    <div class="panel-header flex-wrap gap-3">
+        <div class="panel-title">
+            <i class="fas fa-user-graduate"></i> Enrolled Students Directory ({{ students|length }})
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a href="{{ url_for('admin_student_add') }}" class="btn-primary-custom">
+                <i class="fas fa-plus-circle"></i> Register New Student
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter & Search Bar -->
+    <div class="p-3 bg-light border-bottom">
+        <form method="GET" action="{{ url_for('admin_students') }}" class="row g-2 align-items-center">
+            <div class="col-md-5">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
+                    <input type="text" name="search" class="form-control form-control-custom border-start-0" placeholder="Search by name, roll number, or email..." value="{{ search or '' }}">
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <select name="department" class="form-select form-select-custom" onchange="this.form.submit()">
+                    <option value="All">All Departments</option>
+                    <option value="Computer Science" {% if selected_dept == 'Computer Science' %}selected{% endif %}>Computer Science</option>
+                    <option value="Information Technology" {% if selected_dept == 'Information Technology' %}selected{% endif %}>Information Technology</option>
+                    <option value="Electronics" {% if selected_dept == 'Electronics' %}selected{% endif %}>Electronics</option>
+                    <option value="Mechanical" {% if selected_dept == 'Mechanical' %}selected{% endif %}>Mechanical</option>
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <select name="year" class="form-select form-select-custom" onchange="this.form.submit()">
+                    <option value="All">All Years</option>
+                    <option value="1st Year" {% if selected_year == '1st Year' %}selected{% endif %}>1st Year</option>
+                    <option value="2nd Year" {% if selected_year == '2nd Year' %}selected{% endif %}>2nd Year</option>
+                    <option value="3rd Year" {% if selected_year == '3rd Year' %}selected{% endif %}>3rd Year</option>
+                    <option value="4th Year" {% if selected_year == '4th Year' %}selected{% endif %}>4th Year</option>
+                </select>
+            </div>
+
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-primary-custom w-100 justify-content-center">
+                    <i class="fas fa-filter"></i> Filter
+                </button>
+                {% if search or (selected_dept and selected_dept != 'All') or (selected_year and selected_year != 'All') %}
+                    <a href="{{ url_for('admin_students') }}" class="btn btn-secondary-custom">
+                        <i class="fas fa-times"></i>
+                    </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <!-- Student Table -->
+    <div class="panel-body p-0">
+        <div class="table-responsive">
+            <table class="table-custom">
+                <thead>
+                    <tr>
+                        <th>Photo</th>
+                        <th>Roll Number</th>
+                        <th>Student Name</th>
+                        <th>Department</th>
+                        <th>Year</th>
+                        <th>Email & Contact</th>
+                        <th>Biometric Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in students %}
+                        <tr>
+                            <td>
+                                {% if s.photo_path %}
+                                    <img src="{{ url_for('serve_upload', filename=s.photo_path) }}" class="rounded-circle border" style="width: 44px; height: 44px; object-fit: cover;" alt="{{ s.name }}">
+                                {% else %}
+                                    <div class="rounded-circle bg-light border d-flex align-items-center justify-content-center text-secondary fw-bold" style="width: 44px; height: 44px; font-size: 16px;">
+                                        {{ s.name[:1] }}
+                                    </div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-primary fs-6">{{ s.roll_number }}</span>
+                            </td>
+                            <td>
+                                <a href="{{ url_for('admin_student_profile', student_id=s.id) }}" class="fw-bold text-decoration-none text-dark hover-primary">
+                                    {{ s.name }}
+                                </a>
+                                <div class="text-muted small">{{ s.gender }}</div>
+                            </td>
+                            <td>{{ s.department }}</td>
+                            <td><span class="badge bg-light text-dark border">{{ s.year }}</span></td>
+                            <td>
+                                <div><i class="far fa-envelope text-muted me-1"></i> {{ s.email }}</div>
+                                {% if s.phone %}
+                                    <div class="small text-muted"><i class="fas fa-phone-alt me-1"></i> {{ s.phone }}</div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if s.photo_path %}
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
+                                        <i class="fas fa-check-circle me-1"></i> Enrolled
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2 py-1">
+                                        <i class="fas fa-exclamation-triangle me-1"></i> Needs Photo
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <div class="d-inline-flex gap-1">
+                                    <a href="{{ url_for('admin_student_profile', student_id=s.id) }}" class="btn btn-sm btn-outline-primary" title="View Profile">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{{ url_for('admin_student_edit', student_id=s.id) }}" class="btn btn-sm btn-outline-secondary" title="Edit Student">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <form method="POST" action="{{ url_for('admin_student_delete', student_id=s.id) }}" class="d-inline" onsubmit="return confirm('Are you sure you want to permanently delete student {{ s.name }}? This will also remove all face data and attendance logs.');">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete Student">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="8" class="text-center py-5 text-muted">
+                                <i class="fas fa-user-slash fs-2 d-block mb-2"></i>
+                                No student records found matching the filter criteria.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

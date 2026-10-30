@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block title %}Student Dashboard — Attendify AI{% endblock %}
+{% block page_title %}Student Personal Attendance Portal{% endblock %}
+
+{% block content %}
+<!-- Welcome & Status Banner -->
+<div class="card border-0 text-white rounded-4 p-4 mb-4 shadow" style="background: linear-gradient(135deg, var(--navy-900) 0%, var(--blue-primary) 100%);">
+    <div class="row align-items-center">
+        <div class="col-md-8">
+            <div class="d-flex align-items-center gap-3 mb-2">
+                {% if student.photo_path %}
+                    <img src="{{ url_for('serve_upload', filename=student.photo_path) }}" class="rounded-circle border border-2 border-white shadow" style="width: 60px; height: 60px; object-fit: cover;" alt="{{ student.name }}">
+                {% else %}
+                    <div class="rounded-circle bg-white text-primary fw-bold d-flex align-items-center justify-content-center shadow" style="width: 60px; height: 60px; font-size: 24px;">
+                        {{ student.name[:1] }}
+                    </div>
+                {% endif %}
+                <div>
+                    <h4 class="fw-bold mb-0">Welcome back, {{ student.name }}!</h4>
+                    <div class="text-white-50 small">{{ student.roll_number }} • {{ student.department }} ({{ student.year }})</div>
+                </div>
+            </div>
+            <p class="text-white-50 small mb-0 mt-2">
+                Keep your attendance above 75% to remain eligible for semester examinations and internal assessments.
+            </p>
+        </div>
+
+        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+            {% if today_record %}
+                <div class="p-3 bg-white text-dark rounded-3 shadow-sm text-start">
+                    <div class="small text-muted fw-bold text-uppercase"><i class="fas fa-calendar-check text-success me-1"></i> Today's Attendance</div>
+                    <div class="d-flex align-items-center justify-content-between mt-1">
+                        <span class="badge-status badge-present fs-6">
+                            <i class="fas fa-check"></i> {{ today_record.status }}
+                        </span>
+                        <span class="font-monospace text-muted small">{{ today_record.time }}</span>
+                    </div>
+                </div>
+            {% else %}
+                <div class="p-3 bg-white text-dark rounded-3 shadow-sm text-start">
+                    <div class="small text-muted fw-bold text-uppercase"><i class="fas fa-clock text-warning me-1"></i> Today's Attendance</div>
+                    <div class="d-flex align-items-center justify-content-between mt-1">
+                        <span class="badge bg-warning-subtle text-warning border px-3 py-1">Pending Scan</span>
+                        <span class="text-muted small">Not scanned today</span>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Personal Stats Counters -->
+<div class="row g-4 mb-4">
+    <!-- Overall Percentage -->
+    <div class="col-xl-3 col-sm-6">
+        <div class="stat-card {% if stats.percentage >= 75 %}primary{% else %}danger{% endif %}">
+            <div>
+                <div class="stat-label">Attendance Rate</div>
+                <div class="stat-number">{{ stats.percentage }}%</div>
+                <div class="stat-subtext {% if stats.percentage >= 75 %}text-success{% else %}text-danger{% endif %}">
+                    {% if stats.percentage >= 75 %}
+                        <i class="fas fa-check-circle"></i> Good Standing (&ge; 75%)
+                    {% else %}
+                        <i class="fas fa-exclamation-triangle"></i> Low Attendance Alert
+                    {% endif %}
+                </div>
+            </div>
+            <div class="stat-icon-wrapper {% if stats.percentage >= 75 %}primary{% else %}danger{% endif %}">
+                <i class="fas fa-percent"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Total Present -->
+    <div class="col-xl-3 col-sm-6">
+        <div class="stat-card success">
+            <div>
+                <div class="stat-label">Total Present</div>
+                <div class="stat-number">{{ stats.present }}</div>
+                <div class="stat-subtext text-success">
+                    <i class="fas fa-check-circle"></i> On-time sessions
+                </div>
+            </div>
+            <div class="stat-icon-wrapper success">
+                <i class="fas fa-calendar-check"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Total Late -->
+    <div class="col-xl-3 col-sm-6">
+        <div class="stat-card warning">
+            <div>
+                <div class="stat-label">Late Marks</div>
+                <div class="stat-number">{{ stats.late }}</div>
+                <div class="stat-subtext text-warning">
+                    <i class="fas fa-clock"></i> Arrived past cut-off
+                </div>
+            </div>
+            <div class="stat-icon-wrapper warning">
+                <i class="fas fa-user-clock"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Total Absent -->
+    <div class="col-xl-3 col-sm-6">
+        <div class="stat-card danger">
+            <div>
+                <div class="stat-label">Classes Missed</div>
+                <div class="stat-number">{{ stats.absent }}</div>
+                <div class="stat-subtext text-danger">
+                    <i class="fas fa-times-circle"></i> Absent records
+                </div>
+            </div>
+            <div class="stat-icon-wrapper danger">
+                <i class="fas fa-user-times"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Personal Attendance History -->
+<div class="panel-card">
+    <div class="panel-header">
+        <div class="panel-title">
+            <i class="fas fa-history"></i> Recent Attendance Records
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('export_attendance', fmt='excel') }}" class="btn btn-sm btn-outline-success">
+                <i class="fas fa-file-excel me-1"></i> Excel
+            </a>
+            <a href="{{ url_for('student_my_attendance') }}" class="btn btn-sm btn-primary-custom" style="padding: 4px 12px; font-size: 13px;">
+                View Complete Log
+            </a>
+        </div>
+    </div>
+    <div class="panel-body p-0">
+        <div class="table-responsive">
+            <table class="table-custom">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Scan Time</th>
+                        <th>Status</th>
+                        <th>Verification Method</th>
+                        <th>Confidence Score</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for h in history %}
+                        <tr>
+                            <td><strong>{{ h.date }}</strong></td>
+                            <td><span class="font-monospace text-muted">{{ h.time }}</span></td>
+                            <td>
+                                {% if h.status == 'Present' %}
+                                    <span class="badge-status badge-present"><i class="fas fa-check-circle"></i> Present</span>
+                                {% elif h.status == 'Late' %}
+                                    <span class="badge-status badge-late"><i class="fas fa-clock"></i> Late</span>
+                                {% else %}
+                                    <span class="badge-status badge-absent"><i class="fas fa-times-circle"></i> Absent</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if h.verification_mode == 'Face Recognition' %}
+                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
+                                        <i class="fas fa-camera me-1"></i> Facial Recognition AI
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-light text-dark border">
+                                        <i class="fas fa-user-edit me-1"></i> Instructor Manual
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if h.confidence_score %}
+                                    <span class="badge bg-light text-dark border">{{ "%.1f"|format(h.confidence_score) }}%</span>
+                                {% else %}
+                                    <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+                            <td><small class="text-muted">{{ h.notes or '—' }}</small></td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted">
+                                No attendance records recorded yet.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
