@@ -1,161 +1,225 @@
-# AttendifyAI — Student Online Attendance Detection System using Python & AI Face Recognition
+# AttendifyAI — Student Online Attendance Detection System
 
-[![Python Version](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue.svg)](https://python.org)
-[![Framework](https://img.shields.io/badge/Backend-Flask%203.1-emerald.svg)](https://flask.palletsprojects.com/)
-[![Computer Vision](https://img.shields.io/badge/AI%20Vision-OpenCV%20LBPH%20%2B%20Haar-orange.svg)](https://opencv.org/)
-[![UI Design](https://img.shields.io/badge/Design-Enterprise%20Navy%20%26%20Light%20Blue-0f172a.svg)](https://getbootstrap.com/)
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python">
+  <img src="https://img.shields.io/badge/Flask-3.1.3-000000?style=for-the-badge&logo=flask&logoColor=white" alt="Flask">
+  <img src="https://img.shields.io/badge/OpenCV-5.0%20LBPH-5C3EE8?style=for-the-badge&logo=opencv&logoColor=white" alt="OpenCV">
+  <img src="https://img.shields.io/badge/Bootstrap-5.3-7952B3?style=for-the-badge&logo=bootstrap&logoColor=white" alt="Bootstrap">
+  <img src="https://img.shields.io/badge/Database-SQLite3-003B57?style=for-the-badge&logo=sqlite&logoColor=white" alt="SQLite">
+</p>
 
-**AttendifyAI** is a commercial-grade, end-to-end **Student Online Attendance Detection System** powered by Python Flask, OpenCV computer vision, and LBPH facial recognition biometrics. Designed to look and function like a real commercial SaaS enterprise application.
-
----
-
-## 🌟 Key Features
-
-### 1. 🛡️ Role-Based Authentication & Portals
-- **Administrator Portal:** Full system oversight, biometric enrollment, live camera monitoring, student records management, manual attendance overrides, and institutional reporting.
-- **Student Portal:** Personalized attendance dashboard with self-attendance percentage dials, present/late/absent counters, complete attendance logs, and report exports.
-- **Security:** Password hashing (`PBKDF2-HMAC-SHA256` via Werkzeug), session authentication guards (`@admin_required`, `@student_required`), role separation, and student data isolation.
-
-### 2. 🤖 Live AI Camera Face Detection & Recognition
-- **Real-Time Detection:** Connects to the web camera via HTML5 `getUserMedia` or server-side OpenCV `cv2.VideoCapture`.
-- **Facial Recognition Engine:** Utilizes OpenCV Haar Cascade Classifiers for face detection and Local Binary Patterns Histograms (LBPH) for illumination-invariant recognition.
-- **Real-Time HUD Overlay:** Draws green bounding boxes for recognized students (showing Student Name, Roll Number, and Confidence %) and red bounding boxes with **"Unknown Person"** alerts for unregistered faces.
-- **Automatic Attendance Marking:** Automatically marks attendance as **Present** when a registered student is detected.
-- **Anti-Duplicate Protocol:** Strictly prevents multiple attendance records for the same student on the same day; displays an informational "Already Recorded for Today at HH:MM:SS" banner and skips duplicate database writes.
-- **Audio Chime:** Plays an audio chime upon successful biometric verification.
-
-### 3. 🎓 Student Management & Biometric Enrollment
-- Full CRUD: Register, view, edit, search, filter, and delete students.
-- **Multi-Shot Webcam Biometric Tool:** Rapidly captures 5 face angles directly from the browser webcam with automated data augmentation (illumination adjustments & horizontal mirroring).
-- **Photo Upload Support:** Alternative file upload mode for frontal portrait photos.
-- **Automatic Retraining:** Model automatically re-trains in background immediately upon enrollment or deletion.
-
-### 4. 📊 Attendance Registry & Manual Overrides
-- Complete date-wise, department-wise, and status-wise attendance records.
-- Instructor/Admin **Manual Attendance Override Modal** (mark Present, Late, or Absent with notes).
-- Status update and record deletion capabilities.
-
-### 5. 📈 Reports, Analytics & Exports
-- Dynamic dashboard statistics fetched in real-time from the database.
-- Interactive Chart.js visualizations (Weekly Attendance Trends & Department Distribution).
-- **Low Attendance Defaulter Alerts:** Automatically identifies students with attendance below 75%.
-- **One-Click Exports:**
-  - **Excel (.xlsx):** Professionally styled with navy headers, status color pills, auto-column widths, and gridlines.
-  - **CSV (.csv):** UTF-8 encoded with BOM for full spreadsheet compatibility.
+> **AttendifyAI** is a commercial-grade, modern, and production-ready **Student Online Attendance Detection System** powered by Python Flask, OpenCV computer vision, and Local Binary Patterns Histograms (LBPH) facial recognition biometrics.
 
 ---
 
-## 🏗️ Project Architecture
+## 📌 Repository Links
+- **GitHub Repository:** [https://github.com/sakshijagtap1977-ops/attendance](https://github.com/sakshijagtap1977-ops/attendance)
+- **Clone URL:** `https://github.com/sakshijagtap1977-ops/attendance.git`
+
+---
+
+## 📸 Key Capabilities & Architecture
 
 ```
-project/
+                             +------------------------+
+                             |   Web Camera / Video   |
+                             +-----------+------------+
+                                         |
+                                         v
+                    +--------------------+-------------------+
+                    | Client-Side WebRTC | Server-Side OpenCV |
+                    | (getUserMedia API) | (VideoCapture)     |
+                    +--------------------+-------------------+
+                                         |
+                                         v
+                             +------------------------+
+                             |  OpenCV Face Detection |
+                             |  (Haar Cascade Model)  |
+                             +-----------+------------+
+                                         |
+                                         v
+                             +------------------------+
+                             |  LBPH Face Recognizer  |
+                             |  (Biometric Inference) |
+                             +-----------+------------+
+                                         |
+                   +---------------------+---------------------+
+                   |                                           |
+                   v (Recognized >= 70%)                       v (Unknown Face)
+      +----------------------------+             +---------------------------+
+      |  Auto Mark Attendance      |             |  "Unknown Person" Alert   |
+      |  Anti-Duplicate Check      |             |  Red HUD Bounding Box     |
+      |  Audio Chime & Toast       |             +---------------------------+
+      +--------------+-------------+
+                     |
+                     v
+      +----------------------------+
+      |  SQLite Persistent DB      |
+      |  Attendance & Biometrics   |
+      +----------------------------+
+```
+
+---
+
+## 🌟 Features Breakdown
+
+### 1. 🛡️ Role-Based Authentication & Portals
+- **Administrator Console:**
+  - Executive dashboard with real-time biometric metrics.
+  - Live AI camera feed with HUD overlays.
+  - Full student CRUD directory with search and multi-criteria filters.
+  - Manual attendance override modal (Present, Late, Absent).
+  - Daily, weekly, and monthly institutional reports.
+  - Low attendance (< 75%) defaulter warning triggers.
+- **Student Self-Service Portal:**
+  - Dedicated student login using **Roll Number** & Password.
+  - Real-time personal attendance percentage gauge.
+  - Verification history logs showing timestamp, mode (Face AI / Manual), and confidence score.
+  - Student data isolation: Students can only view their own records.
+- **Security & Validation:**
+  - Password hashing with PBKDF2-HMAC-SHA256 via `werkzeug.security`.
+  - Protected session guards (`@login_required`, `@admin_required`, `@student_required`).
+  - Strict anti-duplicate protocol to prevent double attendance on the same calendar day.
+
+### 2. 🤖 Live AI Camera Face Recognition
+- **Real-Time Detection:** Connects directly to the web camera with low latency.
+- **Real-Time HUD Overlays:**
+  - **Recognized Students:** Neon green rounded bounding box with Student Name, Roll Number, and Match Confidence %.
+  - **Unregistered Faces:** High-visibility red bounding box with "Unknown Person" notification.
+- **Dual Camera Operating Modes:**
+  1. *Browser Client Mode (WebRTC)*: Cross-platform web stream via HTML5 `getUserMedia`.
+  2. *Server Mode (OpenCV)*: High-performance MJPEG live stream direct from OpenCV `cv2.VideoCapture(0)` at `/video_feed`.
+- **Audio Feedback:** Web Audio API synthesized two-tone confirmation chime on verified attendance.
+
+### 3. 🎓 Biometric Enrollment & Automated Training
+- **Multi-Shot Webcam Biometric Tool:** Rapidly captures 5 face angles directly from the browser camera.
+- **Data Augmentation:** Automated illumination balancing and horizontal mirroring for robust recognition under diverse lighting.
+- **File Upload Support:** Upload single frontal portrait photos (JPG, PNG).
+- **Background Retraining:** The AI model re-trains instantly when new students are enrolled or deleted.
+
+### 4. 📊 Analytics, Reports & Exports
+- **Dynamic Metric Cards:** Total Students, Present Today, Late Today, Absent / Pending, and Today's Attendance %.
+- **Chart.js Visualizations:** 7-Day Attendance Trend Bar Chart and Department Enrolled Doughnut Chart.
+- **One-Click Exports:**
+  - **Excel (.xlsx):** Professionally styled workbook with navy headers, status pills (green, amber, red), zebra rows, and auto-adjusted column widths via `openpyxl`.
+  - **CSV (.csv):** Standard RFC 4180 format with UTF-8 BOM.
+
+---
+
+## 📂 Project Directory Structure
+
+```
+attendance/
+├── app.py                              # Flask application controller & routes
+├── database.py                         # SQLite schema & database operations
+├── face_recognition_module.py          # OpenCV Haar Cascade & LBPH recognition engine
+├── attendance.py                       # Business logic, CSV and openpyxl Excel exports
+├── haarcascade_frontalface_default.xml # Pre-trained frontal face detector model
+├── requirements.txt                    # Project dependencies
+├── attendance.db                       # Relational database file (pre-seeded)
+├── test_system.py                      # Automated test suite (6 passing test cases)
+├── push_to_github.py                   # Automated GitHub deployment helper
+├── README.md                           # Documentation
 │
-├── app.py                         # Main Flask application and REST routes
-├── database.py                    # SQLite database schema, connections, and CRUD
-├── face_recognition_module.py     # OpenCV Haar Cascade & LBPH Face Recognition engine
-├── attendance.py                  # Attendance business logic, CSV & Excel exports
-├── haarcascade_frontalface_default.xml # Pre-trained OpenCV Haar Cascade face detector
-├── test_system.py                 # Automated unit and integration test suite
-├── requirements.txt               # Python package dependencies
-├── attendance.db                  # Persistent SQLite database file
-│
-├── templates/                     # Jinja2 HTML5 UI templates
-│   ├── base.html                  # Global layout with enterprise responsive sidebar
+├── templates/                          # Jinja2 HTML5 UI templates
+│   ├── base.html                       # Global layout with enterprise responsive sidebar
 │   ├── auth/
-│   │   ├── login.html             # Tabbed login for Admins & Students
-│   │   └── register.html          # Student self-registration form
+│   │   ├── login.html                  # Tabbed login for Admins & Students
+│   │   └── register.html               # Student self-registration portal
 │   ├── admin/
-│   │   ├── dashboard.html         # Executive metrics cards & Chart.js graphs
-│   │   ├── students.html          # Student records directory with search & filters
-│   │   ├── student_add.html       # Student enrollment & multi-shot webcam tool
-│   │   ├── student_edit.html      # Student details and photo editor
-│   │   ├── student_profile.html   # Detailed student profile & attendance log
-│   │   ├── live_camera.html       # AI Live Camera Face Detection Console
-│   │   ├── attendance.html        # Attendance management & manual override modal
-│   │   └── reports.html           # Institutional reports & low attendance alerts
+│   │   ├── dashboard.html              # Dynamic metrics cards & Chart.js graphs
+│   │   ├── students.html               # Student records directory with search & filters
+│   │   ├── student_add.html            # Enrollment form & multi-shot webcam tool
+│   │   ├── student_edit.html           # Student details and biometric updater
+│   │   ├── student_profile.html        # Individual student profile & attendance history
+│   │   ├── live_camera.html            # AI Live Camera Face Detection Console
+│   │   ├── attendance.html             # Attendance logs & manual override modal
+│   │   └── reports.html                # Daily/Weekly/Monthly reports & defaulter alerts
 │   └── student/
-│       ├── dashboard.html         # Student personal attendance dashboard
-│       ├── my_attendance.html     # Student personal attendance history
-│       └── profile.html           # Student profile & password settings
+│       ├── dashboard.html              # Personal attendance percentage & status banner
+│       ├── my_attendance.html          # Personal attendance log with CSV/Excel download
+│       └── profile.html                # Identity card & password change form
 │
 ├── static/
 │   ├── css/
-│   │   └── style.css              # Custom Enterprise Navy/Light Blue design system
+│   │   └── style.css                   # Custom enterprise stylesheet (Navy / Light Blue)
 │   └── js/
-│       ├── main.js                # UI utilities, real-time clock, Chart.js loaders
-│       └── camera.js              # Webcam streaming, canvas HUD, recognition loop
+│       ├── main.js                     # UI interactions, live clock, Chart.js loaders
+│       └── camera.js                   # Webcam streaming, canvas HUD, recognition loop
 │
 └── uploads/
-    ├── faces/                     # Stored face samples organized by student ID
+    ├── faces/                          # Face biometric image training samples per student
     └── trained/
-        └── face_trainer.yml       # Trained LBPH biometric model weights
+        └── face_trainer.yml            # Pre-trained LBPH biometric model weights
 ```
 
 ---
 
 ## ⚡ Quick Start & Installation
 
-### 1. Prerequisites
-- Python 3.10, 3.11, 3.12, or 3.13 installed.
-- A functional web camera (integrated laptop webcam or USB camera).
-
-### 2. Install Required Dependencies
-In your terminal / PowerShell, run:
+### 1. Clone the Repository
 ```bash
-python -m pip install -r requirements.txt
+git clone https://github.com/sakshijagtap1977-ops/attendance.git
+cd attendance
 ```
 
-### 3. Launch the Application Server
-Run:
+### 2. Install Dependencies
+```bash
+pip install -r requirements.txt
+```
+
+### 3. Run Automated Tests
+```bash
+python test_system.py
+```
+*(All 6 unit and integration test suites pass with 100% success)*
+
+### 4. Start the Application Server
 ```bash
 python app.py
 ```
 
-The application will start on:
-👉 **`http://127.0.0.1:5000`** (or `http://localhost:5000`)
+Open your browser at:
+👉 **`http://127.0.0.1:5000`**
 
 ---
 
 ## 🔑 Default Credentials
 
-The database comes pre-seeded with sample records and default logins:
+The database comes pre-populated with realistic initial data:
 
 ### 🛡️ System Administrator
-- **URL:** `http://127.0.0.1:5000/login` (Select "Administrator" tab)
+- **Login Tab:** Administrator
 - **Username:** `admin`
 - **Password:** `admin123`
 
 ### 🎓 Sample Students
-- **URL:** `http://127.0.0.1:5000/login` (Select "Student Portal" tab)
-- **Student 1 (Ethan Davis):** Roll Number: `CS202601` | Password: `student123`
-- **Student 2 (Sophia Rodriguez):** Roll Number: `CS202602` | Password: `student123`
-- **Student 3 (Aiden Clark):** Roll Number: `IT202603` | Password: `student123`
-- **Student 4 (Emma Watson):** Roll Number: `EC202604` | Password: `student123`
-- **Student 5 (Lucas Miller):** Roll Number: `ME202605` | Password: `student123`
+- **Login Tab:** Student Portal
+- **Student 1 (Ethan Davis):** Roll: `CS202601` | Password: `student123`
+- **Student 2 (Sophia Rodriguez):** Roll: `CS202602` | Password: `student123`
+- **Student 3 (Aiden Clark):** Roll: `IT202603` | Password: `student123`
+- **Student 4 (Emma Watson):** Roll: `EC202604` | Password: `student123`
+- **Student 5 (Lucas Miller):** Roll: `ME202605` | Password: `student123`
 
 ---
 
-## 🧪 Running Automated Tests
+## 📦 Pushing Updates to GitHub
 
-Run the built-in test suite to verify all modules and security gates:
+To push changes to the remote repository `https://github.com/sakshijagtap1977-ops/attendance.git`:
+
 ```bash
-python test_system.py
+# Using Git CLI
+git add .
+git commit -m "Update application and documentation"
+git push -u origin main
 ```
 
-Output:
-```
-Ran 6 tests in 6.5s
-OK
+Or using the included deployment helper:
+```bash
+python push_to_github.py <YOUR_GITHUB_TOKEN>
 ```
 
 ---
 
-## 📋 Technology Stack Summary
-
-| Layer | Technologies Used |
-|---|---|
-| **Frontend** | HTML5, CSS3, JavaScript (ES6+), Bootstrap 5.3, FontAwesome 6, Chart.js, SweetAlert2 |
-| **Backend** | Python 3, Flask 3.1, Werkzeug |
-| **Database** | SQLite3 (Persistent file `attendance.db` with relational schema) |
-| **AI / Vision** | OpenCV 5 (`opencv-contrib-python`), LBPH Face Recognizer, Haar Cascade Classifier |
-| **Export Engines** | `openpyxl` (Native Excel .xlsx with styling), `csv` (RFC 4180 with UTF-8 BOM) |
+## 📄 License
+This project is licensed under the MIT License - open for educational and commercial use.
