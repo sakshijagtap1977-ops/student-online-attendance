@@ -1,29 +1,46 @@
 # Python bytecode & cache
+attendance.db
+uploads/
 __pycache__/
 *.py[cod]
 *$py.class
-*.so
 
-# Environment & Virtual Environments
-.env
-.venv
-env/
+# ==============================
+# VIRTUAL ENVIRONMENT
+# ==============================
+
 venv/
-ENV/
+.venv/
+env/
 
-# IDE & Editor files
+# ==============================
+# IDE SETTINGS
+# ==============================
+
 .vscode/
 .idea/
-*.sublime-project
-*.sublime-workspace
 
-# Operating System files
+# ==============================
+# SYSTEM FILES
+# ==============================
+
 .DS_Store
 Thumbs.db
 desktop.ini
-*.tmp
 
-# Unit test & coverage
-.pytest_cache/
-.coverage
-htmlcov/
+# ==============================
+# LOGS AND TEMPORARY FILES
+# ==============================
+
+*.log
+*.tmp
+temp/
+tmp/
+
+# ==============================
+# BUILD FILES
+# ==============================
+
+build/
+dist/
+*.spec
